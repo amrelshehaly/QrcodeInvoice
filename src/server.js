@@ -123,4 +123,4 @@ app.get('/download', async (req,res)=>{
 
 
 // Setting up the port for listening requests
-app.listen(port, () => console.log("Server at 5000"));
+app.listen(process.env.PORT || port, () => console.log("Server at 5000"));
