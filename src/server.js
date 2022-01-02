@@ -65,9 +65,15 @@ const deleteFolderContent = (directory) =>{
         if (err) throw err;
       
         for (const file of files) {
-          fs.unlink(path.join(directory, file), err => {
-            if (err) throw err;
-          });
+            console.log(file)
+            if(file.includes("out.txt") || file.includes("text.txt")){
+                continue
+            }else{
+                fs.unlink(path.join(directory, file), err => {
+                    if (err) throw err;
+                });
+            }
+         
         }
       })
 }
