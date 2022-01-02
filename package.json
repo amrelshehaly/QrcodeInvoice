@@ -1,0 +1,30 @@
+{
+  "name": "qrcodelabiib",
+  "version": "1.0.0",
+  "description": "generating qrcode to an invoice",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.24.0",
+    "body-parser": "^1.19.1",
+    "buffer": "^6.0.3",
+    "download": "^8.0.0",
+    "ejs": "^3.1.6",
+    "express": "^4.17.2",
+    "express-fileupload": "^1.2.1",
+    "intuit-oauth": "^4.0.0",
+    "js-datepicker": "^5.18.0",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.0",
+    "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
