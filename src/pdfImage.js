@@ -12,14 +12,14 @@ const run = async (pdfPath,imgPath) => {
 
   const pages = pdfDoc.getPages()
   // console.log(pages)
-  const firstPage = pages[0]
+  const firstPage = pages[pages.length-1]
   // console.log(firstPage)
 //   const imagePage = pdfDoc.insertPage(0);
   firstPage.drawImage(img, {
     x: 0,
     y: 0,
     width: firstPage.getWidth()-400,
-    height: firstPage.getHeight()-550,
+    height: firstPage.getHeight()-650,
   });
 
   const pdfBytes = await pdfDoc.save();
