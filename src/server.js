@@ -83,11 +83,12 @@ const deleteFolderContent = (directory) =>{
 // Incase of blank in the index.ejs file, return error 
 // Error  - Empty Data!
 app.post("/scan", (req, res) => {
-    const url = "Seller Name: "+req.body.sellerName+"\n"
-                +"VAT Seller: "+req.body.VATSeller+"\n"
-                +"Date: "+req.body.date+"\n"
-                +"invoice Total: "+req.body.invoiceTotal+"\n"
-                +"VAT Total: "+req.body.VATTotal+"\n" ;
+  let vat_total = parseInt(req.body.invoiceTotal)*0.15 + parseInt(req.body.invoiceTotal)
+  const url = "Seller Name: "+"Establishment Hulul Labibah Commercial"+"\n"
+              +"VAT Seller: "+"2062025378"+"\n"
+              +"Date: "+req.body.date+"\n"
+              +"invoice Total: "+req.body.invoiceTotal+"\n"
+              +"VAT Total: "+vat_total+"\n" ;
 
     if (url.length === 0) res.send("Empty Data!");
     else console.log(url)
