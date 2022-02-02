@@ -3,17 +3,12 @@ const app = express();
 const port = 5000;
 const bp = require("body-parser");
 const qr = require("qrcode");
-const axios = require('axios')
 const path = require('path')
-const assert = require('assert')
-const {PDFDocument} = require('pdf-lib')
 const fileUpload = require('express-fileupload');
-const request = require('request')
 const fs = require('fs')
-const https = require('https')
-const download = require('download');
 const run = require('../src/pdfImage')
 const main = require('../src/mostRecent')
+const OAuthClient = require('intuit-oauth')
 
 var filepath = '';
 
@@ -24,6 +19,10 @@ app.use(fileUpload());
 app.set("view engine", "ejs");
 app.use(bp.urlencoded({ extended: false }));
 app.use(bp.json());
+
+var sellerName =''
+var InvoiceTotal = ''
+var TotalTax = ''
 
 // Simple routing to the index.ejs file
 app.get("/", (req, res) => {
@@ -129,5 +128,146 @@ app.get('/download', async (req,res)=>{
 })
 
 
+/**
+ * App Variables
+ * @type {null}
+ */
+let oauth2_token_json = null;
+let redirectUri = '';
+
+/**
+ * Instantiate new Client
+ * @type {OAuthClient}
+*/
+
+let oauthClient = null;
+
+const urlencodedParser = bp.urlencoded({ extended: false });
+
+
+app.get('/authUri', (req,res)=>{
+    res.render('auth')
+})
+
+app.get('/customers',(req,res)=>{
+    res.render('customers')
+})
+
+app.post('/authUri', function (req, res) {
+    console.log("aaaaaa")
+    oauthClient = new OAuthClient({
+      clientId: req.body.clientId,
+      clientSecret: req.body.clientSecret,
+      environment: req.body.environment,
+      redirectUri: req.body.redirectUri,
+    });
+
+    const authUri = oauthClient.authorizeUri({
+        scope: [OAuthClient.scopes.Accounting],
+        state: 'intuit-test',
+      });
+    
+    //   redirectUri = authUri
+
+      console.log(authUri)
+
+    //   res.send(authUri);
+    res.redirect(authUri)
+});
+
+app.get('/callback', function (req, res) {
+    // console.log(req.url)
+    oauthClient
+      .createToken(req.url)
+      .then(function (authResponse) {
+        oauth2_token_json = JSON.stringify(authResponse.getJson(), null, 2);
+        // console.log(oauth2_token_json)
+      })
+      .catch(function (e) {
+        console.error(e);
+      });
+  
+    res.render('auth');
+});
+
+app.get('/getCompanyInfo', function (req, res) {
+    const companyID = oauthClient.getToken().realmId;
+    console.log("Company ID --> ", companyID)
+  
+    const url =
+      oauthClient.environment == 'sandbox'
+        ? OAuthClient.environment.sandbox
+        : OAuthClient.environment.production;
+  
+    oauthClient
+      .makeApiCall({ url:  `${url}v3/company/${companyID}/companyinfo/${companyID}`})
+      .then(function (authResponse) {
+        console.log(`The response for API call is :${JSON.stringify(authResponse)}`);
+        res.send(JSON.parse(authResponse.text()));
+      })
+      .catch(function (e) {
+        console.error(e);
+      });
+});
+
+
+app.get('/AllInvoices', function (req,res) {
+
+    const companyID = oauthClient.getToken().realmId;
+    // console.log("Company ID --> ", companyID)
+  
+    const url =
+      oauthClient.environment == 'sandbox'
+        ? OAuthClient.environment.sandbox
+        : OAuthClient.environment.production;
+  
+        oauthClient.makeApiCall({url : `${url}v3/company/${companyID}/query?query=select * from invoice `})
+        .then((response)=>{
+          // console.log(`The response for API call is :${JSON.stringify(response)}`)
+        //   res.send(JSON.parse(response.text()));
+        // console.log(JSON.parse(response.body).QueryResponse.Invoice)
+        res.render('customers',{
+            data:JSON.parse(response.body).QueryResponse.Invoice
+        })
+        }).catch((err)=>{
+          console.log(err)
+        })
+  
+  })
+
+  app.get('/invoice',(req,res)=>{
+      console.log(req.query)
+      sellerName = req.query.sellerName
+      InvoiceTotal = req.query.InvoiceTotal
+      TotalTax = req.query.TotalTax
+
+      res.redirect('/')
+  })
+
+
+
+
 // Setting up the port for listening requests
-app.listen(process.env.PORT || port, () => console.log("Server at 5000"));
+const server = app.listen(process.env.PORT || port, () => {
+    console.log(`💻 Server listening on port ${server.address().port}`);
+    
+      redirectUri = `${server.address().port}` + '/callback';
+      console.log(
+        `💳  Step 1 : Paste this URL in your browser : ` +
+          'http://localhost:' +
+          `${server.address().port}`,
+      );
+      console.log(
+        '💳  Step 2 : Copy and Paste the clientId and clientSecret from : https://developer.intuit.com',
+      );
+      console.log(
+        `💳  Step 3 : Copy Paste this callback URL into redirectURI :` +
+          'http://localhost:' +
+          `${server.address().port}` +
+          '/callback',
+      );
+      console.log(
+        `💻  Step 4 : Make Sure this redirect URI is also listed under the Redirect URIs on your app in : https://developer.intuit.com`,
+      );
+
+  });
